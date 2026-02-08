@@ -1,5 +1,7 @@
 package geodata
 
+import "time"
+
 // Country info exposed to other packages
 type Country struct {
 	Name       string
@@ -16,4 +18,9 @@ type countryApiReponse struct {
 	} `json:"name"`
 	Population int64    `json:"population"`
 	Timezones  []string `json:"timezones"` // example: [ "UTC+00:00" ]
+}
+
+type cacheCountryData struct {
+	FetchedAt time.Time   `json:"fetched_at"`
+	Data      TimezoneMap `json:"data"`
 }

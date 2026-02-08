@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func FetchLive() (TimezoneMap, error) {
+func fetchLive() (TimezoneMap, error) {
 	client := http.Client{Timeout: 10 * time.Second}
 
 	// from: https://restcountries.com
@@ -30,6 +30,26 @@ func FetchLive() (TimezoneMap, error) {
 	}
 
 	return buildTzMap(apidData), nil
+}
+
+func Fetch() (TimezoneMap, error) {
+	// try to get from cache
+	tzMap, err := loadFromCache()
+	if err == nil {
+		return tzMap, nil
+	}
+
+	// fetch live and save
+	tzMap, err = fetchLive()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = saveToCache(tzMap); err != nil {
+		return nil, err
+	}
+
+	return tzMap, nil
 }
 
 func buildTzMap(data []countryApiReponse) TimezoneMap {
