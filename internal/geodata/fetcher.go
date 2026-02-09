@@ -24,12 +24,12 @@ func fetchLive() (TimezoneMap, error) {
 		return nil, fmt.Errorf("failed to fetch country data")
 	}
 
-	var apidData []countryApiReponse
-	if err := json.NewDecoder(resp.Body).Decode(&apidData); err != nil {
+	var apiData []countryApiReponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiData); err != nil {
 		return nil, fmt.Errorf("failed to fetch ")
 	}
 
-	return buildTzMap(apidData), nil
+	return buildTzMap(apiData), nil
 }
 
 func Fetch() (TimezoneMap, error) {
