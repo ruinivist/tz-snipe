@@ -40,7 +40,7 @@ func saveToCache(tzMap TimezoneMap) error {
 	path := getCachePath()
 	dir := filepath.Dir(path)
 
-	if err := os.MkdirAll(dir, 755); err != nil { // creates if not exists
+	if err := os.MkdirAll(dir, 0755); err != nil { // creates if not exists
 		return fmt.Errorf("failed to create cache dir")
 	}
 
