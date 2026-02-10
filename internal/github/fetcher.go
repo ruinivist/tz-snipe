@@ -140,3 +140,15 @@ func getUniqueTzFromPatches(patchUrls []string) ([]string, error) {
 
 	return tzs[:end], nil
 }
+
+func GetTzsForUser(username string) ([]string, error) {
+	patches, err := getPushPatches(username)
+	if err != nil {
+		return nil, err
+	}
+	tzs, err := getUniqueTzFromPatches(patches)
+	if err != nil {
+		return nil, err
+	}
+	return tzs, nil
+}
