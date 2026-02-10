@@ -29,7 +29,7 @@ var _ tea.Model = Model{}
 // REMINDER REMINDER REMINDER
 // Model, NewModel, Init, Commands, Update, View is all you need
 
-func NewModel(db geodata.TimezoneMap, ghUser, manualTz string) Model {
+func NewModel(db geodata.TimezoneMap, ghUser, manualTz, targetTime string) Model {
 	m := Model{
 		db:              db,
 		username:        ghUser,
@@ -45,6 +45,23 @@ func NewModel(db geodata.TimezoneMap, ghUser, manualTz string) Model {
 			m.preds = preds
 			m.table = newTable(m.preds)
 			m.displayTz = m.manualTz
+		}
+	case targetTime != "":
+		// Logic for time matching
+		tzs, err := core.GetTZsMatchingTime(db, targetTime)
+		if err != nil {
+			m.err = err
+		} else if len(tzs) == 0 {
+			m.err = fmt.Errorf("no timezones found matching %s", targetTime)
+		} else {
+			preds, err := core.GetStatsForTZs(tzs)
+			if err != nil {
+				m.err = err
+			} else {
+				m.preds = preds
+				m.table = newTable(m.preds)
+				m.displayTz = targetTime
+			}
 		}
 	case ghUser != "":
 		m.loadingGithubTz = true

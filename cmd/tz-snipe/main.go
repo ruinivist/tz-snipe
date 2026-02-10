@@ -18,6 +18,8 @@ func main() {
 	tzFlag := flag.String("tz", "", "Timezone like +1000")
 	// --github mode
 	ghFlag := flag.String("github", "", "From a github username")
+	// --time mode
+	timeFlag := flag.String("time", "", "Time like 15:00")
 
 	flag.Parse()
 
@@ -29,17 +31,24 @@ func main() {
 	}
 
 	// 3. checks
-	if *tzFlag != "" && *ghFlag != "" {
-		fmt.Println("Cannot use both --tz and --github modes")
+	modes := 0
+	for _, val := range []string{*tzFlag, *ghFlag, *timeFlag} {
+		if val != "" {
+			modes++
+		}
+	}
+
+	if modes > 1 {
+		fmt.Println("Cannot use multiple modes at once")
 		os.Exit(1)
 	}
-	if *tzFlag == "" && *ghFlag == "" {
-		fmt.Println("Both args empty... exiting")
+	if modes == 0 {
+		fmt.Println("No args provided... exiting")
 		os.Exit(1)
 	}
 
 	// 4. exec
-	p := tea.NewProgram(ui.NewModel(db, *ghFlag, *tzFlag))
+	p := tea.NewProgram(ui.NewModel(db, *ghFlag, *tzFlag, *timeFlag))
 	if _, err := p.Run(); err != nil {
 		// I keep on forgetting, fmt.ErrorF makes an error, does not print
 		fmt.Printf("Error: %v", err)
