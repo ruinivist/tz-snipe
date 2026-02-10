@@ -115,7 +115,7 @@ func (m Model) View() string {
 	}
 
 	if len(m.preds) == 0 {
-		return AppStyle.Render(SubtleStyle.Render("No valid tzs found. Are you sure it's correct?"))
+		return AppStyle.Render(SubtleStyle.Render("No valid tzs found. Are you sure tz is correct/user is active?"))
 	}
 
 	var header string

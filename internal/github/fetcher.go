@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 )
+
+var rateLimitError = fmt.Errorf("github rate limit exceeded. You can export GH_TOKEN=token for higher limits")
 
 // now the nice thing is that I don't NEED to define a model always,
 // go can be "loose" if you want it to be
@@ -22,7 +25,15 @@ func getPushPatches(user string) ([]string, error) {
 	// another neat way is that you don't NEED a Client
 	// it's good to have it for production for doing timeouts etc though
 	// this uses the global shared default client
-	resp, err := http.Get(url)
+	// update: this comment above was meant for an older http.Get(url) based commit
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	addAuthHeaderIfTokenExists(req)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +41,7 @@ func getPushPatches(user string) ([]string, error) {
 
 	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusTooManyRequests {
 		if resp.Header.Get("X-RateLimit-Remaining") == "0" {
-			return nil, fmt.Errorf("github rate limit exceeded")
+			return nil, rateLimitError
 		}
 	}
 
@@ -80,6 +91,7 @@ func getUniqueTzFromPatches(patchUrls []string) ([]string, error) {
 		// Refer: https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#get-a-commit
 		// this is how YOU do custom stuff
 		req.Header.Set("Accept", "application/vnd.github.patch")
+		addAuthHeaderIfTokenExists(req)
 
 		// can potentially run for INIFINITY as no timeout
 		resp, err := http.DefaultClient.Do(req)
@@ -90,7 +102,7 @@ func getUniqueTzFromPatches(patchUrls []string) ([]string, error) {
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusTooManyRequests {
 			if resp.Header.Get("X-RateLimit-Remaining") == "0" {
-				return nil, fmt.Errorf("github rate limit exceeded")
+				return nil, rateLimitError
 			}
 		}
 
@@ -139,6 +151,13 @@ func getUniqueTzFromPatches(patchUrls []string) ([]string, error) {
 	}
 
 	return tzs[:end], nil
+}
+
+func addAuthHeaderIfTokenExists(req *http.Request) {
+	token := os.Getenv("GH_TOKEN")
+	if token != "" {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
 }
 
 func GetTzsForUser(username string) ([]string, error) {
