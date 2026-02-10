@@ -54,6 +54,7 @@ func GetStatsForTZs(tzs []string) ([]Prediction, error) {
 				Country:     country.Name,
 				Probability: float64(country.Population) / float64(totalPop),
 			})
+			seenCountry[country.Name] = struct{}{}
 		}
 	}
 
