@@ -54,6 +54,9 @@ func NewModel(db geodata.TimezoneMap, ghUser, manualTz string) Model {
 }
 
 func (m Model) Init() tea.Cmd {
+	if m.err != nil {
+		return tea.Quit
+	}
 	if m.loadingGithubTz {
 		return fetchGithubCmd(m.username)
 	}
@@ -76,7 +79,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case errMsg:
 		m.err = msg
-		return m, nil
+		return m, tea.Quit
+		// seems like bubbletea will render once and then quit
+		// as I get my error msg printed
 
 	case tzsMsg:
 		preds, err := core.GetStatsForTZs(msg)
