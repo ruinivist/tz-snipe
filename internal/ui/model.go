@@ -123,7 +123,8 @@ func (m Model) View() string {
 	if m.manualTz != "" {
 		header += SubtleStyle.Render(fmt.Sprintf("Tz : %s\n", m.displayTz))
 	} else {
-		header += SubtleStyle.MaxWidth(60).Render(fmt.Sprintf("User : %s\nTz %s\n", m.username, m.displayTz))
+		// you need Width to split, MaxWidth just truncates
+		header += SubtleStyle.Width(48).Render(fmt.Sprintf("User : %s\nTz   : %s\n", m.username, m.displayTz))
 	}
 
 	table := m.table.View()
