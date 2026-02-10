@@ -7,7 +7,7 @@ import (
 	"tz-snipe/internal/geodata"
 )
 
-func getStatsForTZs(tzs []string) ([]Prediction, error) {
+func GetStatsForTZs(tzs []string) ([]Prediction, error) {
 	// assumes tzs at this stage are uniq
 	// 1. get geodata
 	var predictions []Prediction
@@ -25,13 +25,15 @@ func getStatsForTZs(tzs []string) ([]Prediction, error) {
 	// but append handles init in case of slice
 	// while maps are more strict
 	// so here I need a map
-	seenCountry := make(map[string]int)
+	seenCountry := make(map[string]struct{})
+	// another go quirk: structs take up 0 space
+	// hence above
 	var totalPop int64
-	for _, countries := range tzMap {
-		for _, country := range countries {
+	for _, curTz := range tzs {
+		for _, country := range tzMap[curTz] {
 			if _, exists := seenCountry[country.Name]; !exists {
 				totalPop += country.Population
-				seenCountry[country.Name] = 1
+				seenCountry[country.Name] = struct{}{}
 			}
 		}
 	}
