@@ -45,6 +45,9 @@ func NewModel(db geodata.TimezoneMap, ghUser, manualTz, targetTime string) Model
 			m.err = err
 		} else {
 			m.preds = preds
+			if len(m.preds) == 0 {
+				m.err = fmt.Errorf("no valid tzs found. Are you sure tz is correct?")
+			}
 			m.table = newTable(m.preds)
 			m.displayTz = m.manualTz
 		}
@@ -60,8 +63,12 @@ func NewModel(db geodata.TimezoneMap, ghUser, manualTz, targetTime string) Model
 				m.err = err
 			} else {
 				m.preds = preds
-				m.table = newTable(m.preds)
-				m.displayTz = strings.Join(tzs, ", ")
+				if len(m.preds) == 0 {
+					m.err = fmt.Errorf("no valid tzs found. Are you sure time is correct?")
+				} else {
+					m.table = newTable(m.preds)
+					m.displayTz = strings.Join(tzs, ", ")
+				}
 			}
 		}
 	case ghUser != "":
@@ -107,6 +114,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = err
 		} else {
 			m.preds = preds
+			if len(m.preds) == 0 {
+				m.err = fmt.Errorf("no valid tzs found. Are you sure user is active?")
+				return m, tea.Quit
+			}
 			m.table = newTable(m.preds)
 			m.displayTz = strings.Join(msg, ", ")
 			m.loadingGithubTz = false
@@ -130,10 +141,6 @@ func (m Model) View() string {
 
 	if m.loadingGithubTz {
 		return AppStyle.Render(SubtleStyle.Render("Fetching github commits..."))
-	}
-
-	if len(m.preds) == 0 {
-		return AppStyle.Render(SubtleStyle.Render("No valid tzs found. Are you sure tz is correct/user is active?"))
 	}
 
 	var header string
