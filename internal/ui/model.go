@@ -15,6 +15,7 @@ type Model struct {
 	db              geodata.TimezoneMap
 	username        string
 	manualTz        string
+	targetTime      string
 	preds           []core.Prediction
 	loadingGithubTz bool
 	err             error // this is how error handling is to be done in bubbletea
@@ -34,6 +35,7 @@ func NewModel(db geodata.TimezoneMap, ghUser, manualTz, targetTime string) Model
 		db:              db,
 		username:        ghUser,
 		manualTz:        manualTz,
+		targetTime:      targetTime,
 		loadingGithubTz: false,
 	}
 	switch {
@@ -47,12 +49,11 @@ func NewModel(db geodata.TimezoneMap, ghUser, manualTz, targetTime string) Model
 			m.displayTz = m.manualTz
 		}
 	case targetTime != "":
-		// Logic for time matching
 		tzs, err := core.GetTZsMatchingTime(db, targetTime)
 		if err != nil {
 			m.err = err
 		} else if len(tzs) == 0 {
-			m.err = fmt.Errorf("no timezones found matching %s", targetTime)
+			m.err = fmt.Errorf("no timezones found matching %s. Is time in hh:mm format?", targetTime)
 		} else {
 			preds, err := core.GetStatsForTZs(tzs)
 			if err != nil {
@@ -60,7 +61,7 @@ func NewModel(db geodata.TimezoneMap, ghUser, manualTz, targetTime string) Model
 			} else {
 				m.preds = preds
 				m.table = newTable(m.preds)
-				m.displayTz = targetTime
+				m.displayTz = strings.Join(tzs, ", ")
 			}
 		}
 	case ghUser != "":
@@ -136,12 +137,13 @@ func (m Model) View() string {
 	}
 
 	var header string
-	// manual mode
 	if m.manualTz != "" {
 		header += SubtleStyle.Render(fmt.Sprintf("Tz : %s\n", m.displayTz))
-	} else {
+	} else if m.username != "" {
 		// you need Width to split, MaxWidth just truncates
 		header += SubtleStyle.Width(48).Render(fmt.Sprintf("User : %s\nTz   : %s\n", m.username, m.displayTz))
+	} else {
+		header += SubtleStyle.Render(fmt.Sprintf("Time : %s\nTz   : %s\n", m.targetTime, m.displayTz))
 	}
 
 	table := m.table.View()
