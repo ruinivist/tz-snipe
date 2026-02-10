@@ -11,8 +11,15 @@ build:
 test:
 	go test ./...
 
+# To pass arguments that start with -, use -- to separate make flags from app flags
+# Example: make run -- --time 15:00
+# Example: make run -- --tz +1000
 run:
-	go run $(CMD_PATH) $(args)
+	@go run $(CMD_PATH) $(filter-out $@,$(MAKECMDGOALS))
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+# Catch-all rule to prevent make from complaining about unknown targets (the args)
+%:
+	@:
