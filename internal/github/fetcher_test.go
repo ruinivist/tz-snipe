@@ -20,6 +20,12 @@ func TestGetPushPatches(t *testing.T) {
 func TestGetUniqTzFromPatches(t *testing.T) {
 	// another test in the same vein
 	patches, _ := getPushPatches("torvalds")
+
+	if len(patches) == 0 {
+		// you might be getting rate limited
+		t.Fatalf("no patches found")
+	}
+
 	tzs, err := getUniqueTzFromPatches(patches)
 	if err != nil {
 		t.Fatal(err)

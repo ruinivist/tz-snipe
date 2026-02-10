@@ -28,6 +28,12 @@ func getPushPatches(user string) ([]string, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusTooManyRequests {
+		if resp.Header.Get("X-RateLimit-Remaining") == "0" {
+			return nil, fmt.Errorf("github rate limit exceeded")
+		}
+	}
+
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("github api failed")
 	}
@@ -82,6 +88,12 @@ func getUniqueTzFromPatches(patchUrls []string) ([]string, error) {
 			return nil, fmt.Errorf("failed to get patch")
 		}
 		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusTooManyRequests {
+			if resp.Header.Get("X-RateLimit-Remaining") == "0" {
+				return nil, fmt.Errorf("github rate limit exceeded")
+			}
+		}
+
 		if resp.StatusCode != 200 {
 			// the DOCS say that some larges ones may time out
 			// and they DID
